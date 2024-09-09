@@ -1,0 +1,16 @@
+/bin
+/include
+/Include
+/lib
+/lib64
+/Lib
+/Scripts
+pyvenv.cfg
+/bot/__pycache__
+/bot/cogs/__pycache__
+/bot/ui/__pycache__
+
+
+bot.db
+.env
+/data
