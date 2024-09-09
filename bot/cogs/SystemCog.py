@@ -19,7 +19,7 @@ class SystemCog(commands.Cog):
         await setup_channel.send(embed=setupEmbed)
     
     
-    systemcommands_group = discord.SlashCommandGroup(name='system', description='System commands for the bot.', guild_ids=[977513866097479760])
+    systemcommands_group = discord.SlashCommandGroup(name='system', description='System commands for the bot.')
     
     @systemcommands_group.command()
     @commands.has_permissions(administrator=True)
