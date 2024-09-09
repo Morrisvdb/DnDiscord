@@ -38,7 +38,7 @@ class SystemCog(commands.Cog):
         await ctx.respond(embed=setupEmbed, view=setupView)
     
         await setupView.wait()
-        if setupView.default_channel is None or setupView.default_role is None:
+        if setupView.user_updates_channel is None or setupView.default_role is None or setupView.admin_updates_channel is None:
             await ctx.respond("Setup cancelled.", ephemeral=True)
             return
         
@@ -47,8 +47,8 @@ class SystemCog(commands.Cog):
             guild = Guild(guild_id=ctx.guild.id)
         
         guild.autorole_id = setupView.default_role
-        guild.announce_channel_id = setupView.default_channel
-        guild.updates_channel_id = setupView.updates_channel
+        guild.announce_channel_id = setupView.user_updates_channel
+        guild.updates_channel_id = setupView.admin_updates_channel
         guild.is_set_up = True
         
         db.add(guild)
