@@ -71,7 +71,7 @@ class SetupView(discord.ui.View):
             await interaction.response.send_message("Please select a default role and announcement channel.", ephemeral=True)
             return
         
-        await interaction.response.send_message("Setup complete!", ephemeral=True)
+        await interaction.response.defer()
         self.stop()
         
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -79,3 +79,35 @@ class SetupView(discord.ui.View):
             await interaction.response.send_message("Bad hooman, this isn't for you.", ephemeral=True)
             return False
         return await super().interaction_check(interaction)
+
+class ConfirmView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.choice = False
+    
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
+    async def no_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.choice = False
+        await interaction.response.defer()
+        self.stop()
+    
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.success)
+    async def yes_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.choice = True
+        await interaction.response.defer()
+        self.stop()
+        
+class EnterStringModal(discord.ui.Modal):
+    def __init__(self, title, fieldName):
+        super().__init__(title=title)
+        self.title = title
+        self.fieldName = fieldName
+        self.result = None
+        
+        self.add_item(discord.ui.InputText(label=fieldName, placeholder="Enter a value..."))
+        
+    async def callback(self, interaction: discord.Interaction):
+        self.result = self.children[0].value
+        await interaction.response.send_message(content=f"Entered {self.fieldName}: {self.result}", ephemeral=True)
+        self.stop()
+        
