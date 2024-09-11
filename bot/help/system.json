@@ -1,0 +1,18 @@
+[
+    {
+        "title": "System",
+        "description": "Commands related to the bot's system.",
+        "commands": [
+            {
+                "name": "setup",
+                "description": "Setup the bot for the first time.",
+                "permission": "ADMINISTRATOR"
+            },
+            {
+                "name": "bug",
+                "description": "Report a bug to the developers.",
+                "permission": "SEND_MESSAGES"
+            }
+        ]
+    }
+]
