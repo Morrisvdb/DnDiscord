@@ -35,11 +35,11 @@ class SystemCog(commands.Cog):
             color=discord.Color.green()
         )
         setupView = SetupView(ctx=ctx)
-        await ctx.respond(embed=setupEmbed, view=setupView)
+        msg = await ctx.respond(embed=setupEmbed, view=setupView)
     
         await setupView.wait()
         if setupView.default_channel is None or setupView.default_role is None:
-            await ctx.respond("Setup cancelled.", ephemeral=True)
+            await msg.edit(embed=discord.Embed(title="Setup cancelled.", color=discord.Color.red()), view=None)
             return
         
         guild = db.query(Guild).filter(Guild.guild_id == ctx.guild.id).first()
@@ -50,6 +50,8 @@ class SystemCog(commands.Cog):
         guild.announce_channel_id = setupView.default_channel
         guild.updates_channel_id = setupView.updates_channel
         guild.is_set_up = True
+        
+        await msg.edit(embed=discord.Embed(title="Setup complete!", color=discord.Color.green()), view=None)
         
         db.add(guild)
         db.commit()

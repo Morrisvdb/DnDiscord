@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, VARCHAR
+from sqlalchemy import Column, Integer, String, Boolean, VARCHAR, Time
 from __init__ import Base, engine, db
 from discord.ext import commands
 
@@ -30,5 +30,31 @@ class Guild(Base):
     def __repr__(self):
         return f'<Guild {self.guild_id}>'   
     
+class Session(Base):
+    __tablename__ = 'sessions'
+    
+    id = Column(Integer, primary_key=True)
+    session_id = Column(VARCHAR(255), unique=True)
+    guild_id = Column(VARCHAR(255))
+    time = Column(Time(255))
+    day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday
+    name = Column(String(255))
+    is_active = Column(Boolean)
+    played_today = Column(Boolean)
+    
+    def __repr__(self):
+        return f'<Session {self.name}>'
+
+class SessionSignup(Base):
+    __tablename__ = 'session_signups'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(VARCHAR(255))
+    session_id = Column(VARCHAR(255))
+    state = Column(Boolean)
+    standard = Column(Boolean, default=None)
+    
+    def __repr__(self):
+        return f'<SessionSignup {self.user_id} for {self.session_id}>'
 
 Base.metadata.create_all(engine)

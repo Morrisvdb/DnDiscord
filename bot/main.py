@@ -4,6 +4,7 @@ from config import Config
 import functools
   
 bot.load_extension('cogs.SystemCog')
+bot.load_extension('cogs.SessionCog')
 
 @bot.event
 async def on_ready():
