@@ -19,7 +19,7 @@ class SystemCog(commands.Cog):
         await setup_channel.send(embed=setupEmbed)
     
     
-    systemcommands_group = discord.SlashCommandGroup(name='system', description='System commands for the bot.', guild_ids=[977513866097479760])
+    systemcommands_group = discord.SlashCommandGroup(name='system', description='System commands for the bot.')
     
     @systemcommands_group.command()
     @commands.has_permissions(administrator=True)
@@ -38,8 +38,8 @@ class SystemCog(commands.Cog):
         msg = await ctx.respond(embed=setupEmbed, view=setupView)
     
         await setupView.wait()
-        if setupView.default_channel is None or setupView.default_role is None:
-            await msg.edit(embed=discord.Embed(title="Setup cancelled.", color=discord.Color.red()), view=None)
+        if setupView.user_updates_channel is None or setupView.default_role is None or setupView.admin_updates_channel is None:
+            await ctx.respond("Setup cancelled.", ephemeral=True)
             return
         
         guild = db.query(Guild).filter(Guild.guild_id == ctx.guild.id).first()
@@ -47,8 +47,8 @@ class SystemCog(commands.Cog):
             guild = Guild(guild_id=ctx.guild.id)
         
         guild.autorole_id = setupView.default_role
-        guild.announce_channel_id = setupView.default_channel
-        guild.updates_channel_id = setupView.updates_channel
+        guild.announce_channel_id = setupView.user_updates_channel
+        guild.updates_channel_id = setupView.admin_updates_channel
         guild.is_set_up = True
         
         await msg.edit(embed=discord.Embed(title="Setup complete!", color=discord.Color.green()), view=None)

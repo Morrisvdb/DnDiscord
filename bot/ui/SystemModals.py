@@ -7,7 +7,8 @@ class SetupView(discord.ui.View):
         self.ctx = ctx
         
         self.default_role = None
-        self.default_channel = None
+        self.user_update_channel = None
+        self.admin_updates_channel = None
 
         # Set roles for select options
         roles = ctx.guild.roles
@@ -48,24 +49,25 @@ class SetupView(discord.ui.View):
         
     @discord.ui.select(placeholder="Announcement Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
     async def default_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.default_channel = select.values[0]
+        self.user_updates_channel = select.values[0]
         await interaction.response.defer()
         
     @discord.ui.select(placeholder="Admin Updates Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
     async def updates_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.updates_channel = select.values[0]
+        self.admin_updates_channel = select.values[0]
         await interaction.response.defer()
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.default_channel = None
+        self.user_updates_channel = None
         self.default_role = None
-        await interaction.response.defer()
+        self.admin_updates_channel = None
+        await interaction.response.send_message("Setup cancelled.", ephemeral=True)
         self.stop()
 
     @discord.ui.button(label="Setup", style=discord.ButtonStyle.primary)
     async def setup(self, button: discord.ui.Button, interaction: discord.Interaction):
-        if self.default_role is None or self.default_channel is None:
+        if self.default_role is None or self.user_updates_channel is None or self.admin_updates_channel is None:
             await interaction.response.send_message("Please select a default role and announcement channel.", ephemeral=True)
             return
         
