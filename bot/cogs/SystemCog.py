@@ -55,6 +55,20 @@ class SystemCog(commands.Cog):
         
         db.add(guild)
         db.commit()
+        
+    @systemcommands_group.command(name='bug', description='Found a bug? Report it here!')
+    async def system_bug(self, ctx):
+        """Report a bug to the developers.
+
+        Args:
+            ctx (discord.ApplicationContext)
+        """
+        bugEmbed = discord.Embed(
+            title="Report a bug",
+            description="Found a bug? Report it on our GitHub page!",
+            url="https://github.com/Morrisvdb/DnDiscord/issues"
+        )
+        await ctx.respond(embed=bugEmbed)
 
 def setup(bot):
     bot.add_cog(SystemCog(bot))
