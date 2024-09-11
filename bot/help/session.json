@@ -1,0 +1,58 @@
+[
+    {
+        "title": "Session",
+        "description": "Commands related to sessions.",
+        "commands": [
+            {
+                "name": "create",
+                "description": "Create a session.",
+                "permission": "ADMINISTRATOR"
+            },
+            {
+                "name": "delete",
+                "description": "Delete a session.",
+                "permission": "ADMINISTRATOR"
+            },
+            {
+                "name": "presence",
+                "description": "Set wether or not you will be present.",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "list",
+                "description": "List all sessions.",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "default-signup",
+                "description": "Set your default presence.",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "default-remove",
+                "description": "Remove your default presence.",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "default-see",
+                "description": "See your own current default presence.",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "deactivate",
+                "description": "Deactivate a session.",
+                "permission": "ADMINISTRATOR"
+            },
+            {
+                "name": "activate",
+                "description": "Activate a session.",
+                "permission": "ADMINISTRATOR"
+            },
+            {
+                "name": "unplay",
+                "description": "Unplay a session. (Might help at some point when something goes wrong)",
+                "permission": "ADMINISTRATOR"
+            }
+        ]
+    }
+]
