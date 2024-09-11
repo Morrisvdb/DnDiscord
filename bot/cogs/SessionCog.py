@@ -10,7 +10,7 @@ class SessionCog(commands.Cog):
         self.bot = bot
         self.check_sessions.start()
     
-    sessioncommands_group = discord.SlashCommandGroup(name='session', description='Session commands for the bot.', guild_ids=[977513866097479760])
+    sessioncommands_group = discord.SlashCommandGroup(name='session', description='Session commands for the bot.')
     
     @sessioncommands_group.command(name="create")
     @commands.guild_only()
