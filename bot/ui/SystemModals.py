@@ -9,6 +9,7 @@ class SetupView(discord.ui.View):
         self.default_role = None
         self.user_update_channel = None
         self.admin_updates_channel = None
+        self.role_select_channel = None
 
         # Set roles for select options
         roles = ctx.guild.roles
@@ -31,14 +32,17 @@ class SetupView(discord.ui.View):
         if channels is None:
             select_channels = discord.SelectOption(label="No Channels Found", value="none")
         else:
-            if len(channels) > 25:
-                channels = channels[:25]
+            if len(channels) > 24:
+                channels = channels[:24]
                 
             for channel in channels:
                 select_channels.append(discord.SelectOption(label=channel.name, value=str(channel.id)))
                 
         self.default_channel_callback.options = select_channels
         self.updates_channel_callback.options = select_channels
+        select_channels.append(discord.SelectOption(label="None", value="none"))
+        self.role_select_channel_callback.options = select_channels
+        
 
 
     # TODO: Implement the setup menu
@@ -56,12 +60,18 @@ class SetupView(discord.ui.View):
     async def updates_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
         self.admin_updates_channel = select.values[0]
         await interaction.response.defer()
+        
+    @discord.ui.select(placeholder="Role Select Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
+    async def role_select_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.role_select_channel = select.values[0]
+        await interaction.response.defer()
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.user_updates_channel = None
         self.default_role = None
         self.admin_updates_channel = None
+        self.role_select_channel = None
         await interaction.response.send_message("Setup cancelled.", ephemeral=True)
         self.stop()
 

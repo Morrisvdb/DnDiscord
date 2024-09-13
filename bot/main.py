@@ -7,6 +7,7 @@ bot.remove_command('help')
 bot.load_extension('cogs.SystemCog')
 bot.load_extension('cogs.SessionCog')
 bot.load_extension('cogs.HelpCog')
+bot.load_extension('cogs.RolesCog')
 
 @bot.event
 async def on_ready():
