@@ -25,6 +25,7 @@ class Guild(Base):
     autorole_id = Column(VARCHAR(255))
     updates_channel_id = Column(VARCHAR(255))
     announce_channel_id = Column(VARCHAR(255))
+    roles_select_channel = Column(VARCHAR(255), nullable=True)
     is_set_up = Column(Boolean)
     
     def __repr__(self):
@@ -56,5 +57,26 @@ class SessionSignup(Base):
     
     def __repr__(self):
         return f'<SessionSignup {self.user_id} for {self.session_id}>'
+
+class Role(Base):
+    __tablename__ = 'roles'
+    
+    id = Column(Integer, primary_key=True)
+    role_id = Column(VARCHAR(255), unique=True)
+    guild_id = Column(VARCHAR(255))
+    
+    def __repr__(self):
+        return f'<Role {self.role_id}>'
+    
+class RoleMessages(Base):
+    __tablename__ = 'role_messages'
+    
+    id = Column(Integer, primary_key=True)
+    message_id = Column(VARCHAR(255), unique=True)
+    guild_id = Column(VARCHAR(255))
+    channel_id = Column(VARCHAR(255))
+    
+    def __repr__(self):
+        return f'<RoleMessages {self.name}>'
 
 Base.metadata.create_all(engine)
