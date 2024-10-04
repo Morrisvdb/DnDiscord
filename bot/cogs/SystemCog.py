@@ -1,3 +1,4 @@
+from os import system
 import discord
 from discord.ext import commands, tasks
 from models import Guild, setup_required, RoleMessages, Role
@@ -19,7 +20,6 @@ class SystemCog(commands.Cog):
             color=discord.Color.green()
         )
         await setup_channel.send(embed=setupEmbed)
-    
     
     systemcommands_group = discord.SlashCommandGroup(name='system', description='System commands for the bot.')
     
@@ -73,21 +73,70 @@ class SystemCog(commands.Cog):
         )
         await ctx.respond(embed=bugEmbed)
 
+    @systemcommands_group.command(name='set-default-role', description='Set the default role for new members.')
+    @setup_required()
+    async def set_default_role(self, ctx, role: discord.Role):
+        """Set the default role for new members. This role will be applied to all members when they join. Requires administrator permissions.
+
+        Args:
+            ctx (discord.ApplicationContext)
+            role (discord.Role): The role to set as the default role.
+        """
+        guild = db.query(Guild).filter(Guild.guild_id == ctx.guild.id).first()
+        
+        guild.autorole_id = role.id
+        
+        db.add(guild)
+        db.commit()
+        
+        await ctx.respond(f"Default role set to {role.mention}.", ephemeral=True)        
+
+    @systemcommands_group.command(name='apply-default-roles', description='Apply the default roles to all members.')
+    @setup_required()
+    async def apply_default_roles(self, ctx):
+        """Apply the default roles to all members.
+
+        Args:
+            ctx (discord.ApplicationContext)
+        """
+        guild = db.query(Guild).filter(Guild.guild_id == ctx.guild.id).first()
+        role = ctx.guild.get_role(int(guild.autorole_id))
+        
+        if role is None:
+            await ctx.respond("No default role set.", ephemeral=True)
+            return
+        
+        for member in ctx.guild.members:
+            if ctx.guild.get_role(guild.autorole_id) not in member.roles:
+                try:
+                    await member.add_roles(role)
+                except discord.errors.Forbidden:
+                    pass # Silently fail if the role is higher than the bot's role
+        
+        await ctx.respond("Default roles applied to all members.", ephemeral=True)
+
+    @systemcommands_group.command(name='test', description='Test the bot.')
+    async def test(self, ctx):
+        print(self.bot.get_guild(ctx.guild.id).members)
+
     @tasks.loop(seconds=10)
     async def update_channels(self):
         guilds = db.query(Guild).filter_by(is_set_up=True).all()
         for guild in guilds:
-            guild = await self.bot.fetch_guild(guild.guild_id)
+            guild = self.bot.get_guild(int(guild.guild_id))
             if guild is None:
                 continue
             
             guildobj = db.query(Guild).filter(Guild.guild_id == guild.id).first()
-                
-            for member in guild.members:
-                if guild.get_role(guildobj.autorole_id) not in member.roles:
-                    await member.add_roles(guild.get_role(guildobj.autorole_id))
+            members = guild.members
+            for member in members:
+                if guild.get_role(int(guildobj.autorole_id)) not in member.roles:
+                    try:
+                        await member.add_roles(guild.get_role(int(guildobj.autorole_id)))
+                    except discord.errors.Forbidden:
+                        pass # Silently fail if the role is higher than the bot's role
             
-            role_channel = await guild.fetch_channel(guildobj.roles_select_channel)
+            role_channel = await guild.fetch_channel(int(guildobj.roles_select_channel))
             if role_channel is not None:
                 roles_models = db.query(Role).filter_by(guild_id=guild.id).all()
                 roles = []
@@ -125,6 +174,6 @@ class SystemCog(commands.Cog):
                 
             db.commit()
 
-
+    
 def setup(bot):
     bot.add_cog(SystemCog(bot))
