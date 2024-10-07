@@ -37,7 +37,7 @@ class Session(Base):
     id = Column(Integer, primary_key=True)
     session_id = Column(VARCHAR(255), unique=True)
     guild_id = Column(VARCHAR(255))
-    time = Column(Time(255))
+    time = Column(Time())
     day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday
     name = Column(String(255))
     is_active = Column(Boolean)
@@ -45,6 +45,24 @@ class Session(Base):
     
     def __repr__(self):
         return f'<Session {self.name}>'
+
+class Group(Base):
+    __tablename__ = 'groups'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(32))
+    owner_id = Column(VARCHAR(255))
+    session_id = Column(VARCHAR(255))    
+
+class GroupJoin(Base):
+    __tablename__ = 'group_joins'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(VARCHAR(255))
+    group_id = Column(VARCHAR(255))
+    
+    def __repr__(self):
+        return f'<GroupJoin {self.user_id} for {self.group_id}>'
 
 class SessionSignup(Base):
     __tablename__ = 'session_signups'
