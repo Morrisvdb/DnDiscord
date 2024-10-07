@@ -1,3 +1,4 @@
+from math import e
 import discord, datetime
 from discord.ext import commands, tasks
 from models import Guild, Session, SessionSignup, setup_required
@@ -26,7 +27,7 @@ class SessionCog(commands.Cog):
         dayTimeView = DayTimeView(ctx)
         dayTimeEmbed = dayTimeView.generate_embed()
         
-        msg = await ctx.respond(embed=dayTimeEmbed, view=dayTimeView)
+        msg = await ctx.respond(embed=dayTimeEmbed, view=dayTimeView, ephemeral=True)
         await dayTimeView.wait()
         
         if dayTimeView.day is None or dayTimeView.time is None:
@@ -46,15 +47,15 @@ class SessionCog(commands.Cog):
     async def delete(self, ctx):
         sessionSelectView = SessionSelectView(ctx)
         
-        await ctx.respond("Select a session.", view=sessionSelectView)
+        msg = await ctx.respond("Select a session.", view=sessionSelectView, ephemeral=True)
         await sessionSelectView.wait()
         if sessionSelectView.session is None:
-            await ctx.respond("No session selected.")
+            await msg.edit("No session selected.")
             return
         
         session = db.query(Session).filter(Session.id == sessionSelectView.session).first()
         if session is None:
-            await ctx.respond("No session found.")
+            await msg.edit("No session found.")
             return
         
         confirmEmbed = discord.Embed(
@@ -63,7 +64,7 @@ class SessionCog(commands.Cog):
             color=discord.Color.red()
         )
         confirmView = ConfirmView()
-        msg = await ctx.respond(embed=confirmEmbed, view=confirmView)
+        msg = await ctx.respond(embed=confirmEmbed, view=confirmView, ephemeral=True)
         
         await confirmView.wait()
         if not confirmView.choice:
@@ -87,15 +88,15 @@ class SessionCog(commands.Cog):
     async def presence(self, ctx):
         sessionSelectView = SessionSelectView(ctx)
         
-        msg = await ctx.respond("Select a session to manage your presence.", view=sessionSelectView)
+        msg = await ctx.respond("Select a session to manage your presence.", view=sessionSelectView, ephemeral=True)
         await sessionSelectView.wait()
         if sessionSelectView.session is None:
-            await ctx.respond("No session selected.")
+            await msg.edit("No session selected.")
             return
         
         session = db.query(Session).filter(Session.id == sessionSelectView.session).first()
         if session is None:
-            await ctx.respond("No session found.")
+            await msg.edit("No session found.")
             return
         
         presenceView = PresenceView(ctx, session)
@@ -103,7 +104,7 @@ class SessionCog(commands.Cog):
         await presenceView.wait()
         
         if presenceView.state is None:
-            await ctx.respond("No state selected.")
+            await msg.edit("No state selected.")
             return
         
         signup = db.query(SessionSignup).filter(SessionSignup.user_id == ctx.author.id, SessionSignup.session_id == session.id).first()
@@ -136,7 +137,6 @@ class SessionCog(commands.Cog):
         signups = db.query(SessionSignup).filter(SessionSignup.session_id == session.id).all()
         viewPresenceView = ViewPresenceView(ctx, signups=signups, session=session)
         viewPresenceEmbed = viewPresenceView.generate_embed()
-        
         await ctx.respond(embed=viewPresenceEmbed, view=viewPresenceView)
         await viewPresenceView.wait()
 
@@ -150,7 +150,7 @@ class SessionCog(commands.Cog):
             description="Select a session to set your default signup state.",
             color=discord.Color.blue()
         )
-        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView)
+        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView, ephemeral=True)
         await sessionSelectView.wait()
         if sessionSelectView.session is None:
             await ctx.respond("No session selected.")
@@ -198,7 +198,7 @@ class SessionCog(commands.Cog):
             description="Select a session to remove your default signup state.",
             color=discord.Color.blue()
         )
-        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView)
+        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView, ephemeral=True)
         await sessionSelectView.wait()
         if sessionSelectView.session is None:
             await ctx.respond("No session selected.")
@@ -218,7 +218,7 @@ class SessionCog(commands.Cog):
         db.add(signup)
         db.commit()
         
-        await ctx.respond(f"Default signup state for session {session.name} removed.", ephemeral=True)
+        await msg.edit(content=f"Default signup state for session {session.name} removed successfully.", view=None, embed=None)
 
     @sessioncommands_group.command(name="default-see", description="Get your default state for a session.")
     @commands.guild_only()
@@ -230,7 +230,7 @@ class SessionCog(commands.Cog):
             description="Select a session to see your default signup state.",
             color=discord.Color.blue()
         )
-        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView)
+        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView, ephemeral=True)
         await sessionSelectView.wait()
         if sessionSelectView.session is None:
             await ctx.respond("No session selected.")
@@ -238,15 +238,15 @@ class SessionCog(commands.Cog):
         session = db.query(Session).filter(Session.id == sessionSelectView.session).first()
         
         if session is None:
-            await ctx.respond("No session found.")
+            await msg.edit(content="No session found.", embed=None, view=None)
             return
         
         signup = db.query(SessionSignup).filter_by(user_id=ctx.author.id, session_id=session.id).first()
         if signup is None or signup.standard is None:
-            await ctx.respond("No default signup state found.")
+            await msg.edit(content="No default signup state found.", embed=None, view=None)
             return
         
-        await ctx.respond(f"Your default signup state for session {session.name} is {'Present' if signup.standard else 'Absent'}.", ephemeral=True)
+        await msg.edit(content=f"Your default signup state for session {session.name} is {'Present' if signup.standard else 'Absent'}.", embed=None, view=None)
 
     @sessioncommands_group.command(name="deactivate", description="Deactivate a session.")
     @commands.guild_only()

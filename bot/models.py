@@ -37,7 +37,7 @@ class Session(Base):
     id = Column(Integer, primary_key=True)
     session_id = Column(VARCHAR(255), unique=True)
     guild_id = Column(VARCHAR(255))
-    time = Column(Time(255))
+    time = Column(Time())
     day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday
     name = Column(String(255))
     is_active = Column(Boolean)
