@@ -27,6 +27,31 @@
                 "name": "edit",
                 "description": "Edit a group that you own",
                 "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "transfer",
+                "description": "Transfer ownership of a group",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "kick",
+                "description": "Kick a member from a group",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "invite",
+                "description": "Invite a member to a group",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "invites-list",
+                "description": "List all invites to a group",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "list",
+                "description": "List all members of a group",
+                "permission": "SEND_MESSAGES"
             }
         ]
     }

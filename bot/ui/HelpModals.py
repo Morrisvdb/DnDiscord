@@ -48,3 +48,9 @@ class HelpView(discord.ui.View):
         self.current_category = "session.json"
         self.is_home = False
         await interaction.response.edit_message(embed=self.generate_embed(), view=self)
+        
+    @discord.ui.button(label="Groups", style=discord.ButtonStyle.primary)
+    async def groups(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.current_category = "group.json"
+        self.is_home = False
+        await interaction.response.edit_message(embed=self.generate_embed(), view=self)
