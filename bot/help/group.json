@@ -1,0 +1,33 @@
+[
+    {
+        "title": "Groups",
+        "description": "Commands related to groups.",
+        "commands": [
+            {
+                "name": "create",
+                "description": "Create a group for a chosen session",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "delete",
+                "description": "Delete a group that you own",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "browse",
+                "description": "Browse all groups",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "leave",
+                "description": "Leave a group",
+                "permission": "SEND_MESSAGES"
+            },
+            {
+                "name": "edit",
+                "description": "Edit a group that you own",
+                "permission": "SEND_MESSAGES"
+            }
+        ]
+    }
+]
