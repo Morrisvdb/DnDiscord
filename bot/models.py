@@ -51,6 +51,7 @@ class Group(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
+    description = Column(String(255))
     owner_id = Column(VARCHAR(255))
     session_id = Column(VARCHAR(255))    
 
