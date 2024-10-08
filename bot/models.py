@@ -51,9 +51,10 @@ class Group(Base):
     
     id = Column(Integer, primary_key=True)
     name = Column(String(32))
-    description = Column(String(255))
+    description = Column(String(1023))
     owner_id = Column(VARCHAR(255))
-    session_id = Column(VARCHAR(255))    
+    session_id = Column(VARCHAR(255))
+    private = Column(Boolean, default=False)
 
 class GroupJoin(Base):
     __tablename__ = 'group_joins'
@@ -61,6 +62,7 @@ class GroupJoin(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(VARCHAR(255))
     group_id = Column(VARCHAR(255))
+    is_invite = Column(Boolean, default=False)
     
     def __repr__(self):
         return f'<GroupJoin {self.user_id} for {self.group_id}>'
