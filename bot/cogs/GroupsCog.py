@@ -519,6 +519,8 @@ class groupsCog(commands.Cog):
         groupListEmbed = await groupListView.update()
         await msg.edit(embed=groupListEmbed, view=groupListView)
         
+    @groups_command_group.command(name='cancel', description="Cancel a group, meaning that you will be absent.")
+        
         
 def setup(bot):
     bot.add_cog(groupsCog(bot))

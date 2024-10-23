@@ -55,6 +55,7 @@ class Group(Base):
     owner_id = Column(VARCHAR(255))
     session_id = Column(VARCHAR(255))
     private = Column(Boolean, default=False)
+    canceled = Column(Boolean, default=False)
 
 class GroupJoin(Base):
     __tablename__ = 'group_joins'

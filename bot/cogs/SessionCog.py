@@ -100,7 +100,12 @@ class SessionCog(commands.Cog):
             return
         
         presenceView = PresenceView(ctx, session)
-        await msg.edit(view=presenceView)
+        presenceEmbed = discord.Embed(
+            title="Select your presence",
+            description="Select your presence for the session. \n Selecting absent will automatically cancel all groups you own.",
+            color=discord.Color.blue()
+        )
+        await msg.edit(view=presenceView, embed=presenceEmbed)
         await presenceView.wait()
         
         if presenceView.state is None:
@@ -335,6 +340,19 @@ class SessionCog(commands.Cog):
         """
         sessions = db.query(Session).all()
         for session in sessions:
+            # ------- Auto cancel groups -------
+            for group in db.query(Group).filter(Group.session_id == session.id).all():
+                if db.query(SessionSignup).filter_by(user_id = group.owner_id, session_id = session.id).first().state is False:
+                    group.canceled = True
+                    db.add(group)
+                    db.commit()
+                    
+                elif db.query(SessionSignup).filter_by(user_id = group.owner_id, session_id = session.id).first().state is True:
+                    group.cancelled = False
+                    db.delete(group)
+                    db.commit()
+            
+            
             for signup in db.query(SessionSignup).filter(SessionSignup.session_id == session.id).all():
                 if signup.standard is not None and signup.state is None:
                     signup.state = signup.standard
