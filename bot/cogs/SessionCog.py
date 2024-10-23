@@ -372,12 +372,15 @@ class SessionCog(commands.Cog):
                     
                     category = self.bot.get_channel(int(guild_obj.groups_channel_category_id))
                     if category is not None:
-                        channel = guild.get_channel(int(group.channel_id))
+                        try:
+                            channel = await self.bot.fetch_channel(int(group.channel_id))
+                        except discord.errors.NotFound:
+                            channel = None
                         if not channel:
                             channel = await guild.create_text_channel(name=group.name, category=category)
+                            memberRole = guild.get_role(int(guild_obj.autorole_id))
+                            await channel.set_permissions(memberRole, view_channel=False)
                             await channel.set_permissions(role, view_channel=True)
-                            memberRole = guild.get_role(int(guild_obj.autorole_id), view_channel=False)
-                            await channel.set_permissions(memberRole)
                             group.channel_id = channel.id
                             db.add(group)
                             db.commit()

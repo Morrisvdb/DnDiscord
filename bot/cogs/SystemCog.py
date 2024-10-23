@@ -115,10 +115,6 @@ class SystemCog(commands.Cog):
         
         await ctx.respond("Default roles applied to all members.", ephemeral=True)
 
-    @systemcommands_group.command(name='test', description='Test the bot.')
-    async def test(self, ctx):
-        print(self.bot.get_guild(ctx.guild.id).members)
-
     @tasks.loop(seconds=10)
     async def update_channels(self):
         guilds = db.query(Guild).filter_by(is_set_up=True).all()
