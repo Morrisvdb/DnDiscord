@@ -44,7 +44,6 @@ class SetupView(discord.ui.View):
         self.role_select_channel_callback.options = select_channels
         
 
-
     # TODO: Implement the setup menu
     @discord.ui.select(placeholder="Default Role", options=[discord.SelectOption(label="No Roles Found", value="none")])
     async def default_role_callback(self, select: discord.ui.Select, interaction: discord.Interaction):

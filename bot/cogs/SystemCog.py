@@ -58,7 +58,7 @@ class SystemCog(commands.Cog):
         
         db.add(guild)
         db.commit()
-        
+
     @systemcommands_group.command(name='bug', description='Found a bug? Report it here!')
     async def system_bug(self, ctx):
         """Report a bug to the developers.
