@@ -10,6 +10,27 @@ class SessionCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.check_sessions.start()
+        
+    async def inform_group(self, guild, group, state):
+        group_channel = self.bot.get_channel(int(group.channel_id))
+        if group_channel is None:
+            return
+        role = guild.get_role(int(group.role_id))
+        if role is None:
+            return
+        if state:
+            embed = discord.Embed(
+                title="Group Un-Canceled",
+                description=f"The next session for the group {group.name} has been un-canceled.",
+                color=discord.Color.green()
+            )
+        else:
+            embed = discord.Embed(
+                title="Group Canceled",
+                description=f"The next session for the group {group.name} has been canceled.",
+                color=discord.Color.red()
+            )
+        await group_channel.send(content=role.mention, embed=embed)
     
     sessioncommands_group = discord.SlashCommandGroup(name='session', description='Session commands for the bot.')
     
@@ -118,6 +139,13 @@ class SessionCog(commands.Cog):
         
         signup.state = presenceView.state
         db.add(signup)
+        
+        groups = db.query(Group).filter(Group.owner_id == ctx.author.id, Group.session_id == session.id).all()
+        
+        for group in groups:
+            print(group)
+            await self.inform_group(guild=ctx.guild, group=group, state=presenceView.state) 
+        
         db.commit()
         
         await ctx.respond(f"Your presence for session {session.name} has been set to {'Present' if presenceView.state else 'Absent'}.", ephemeral=True)
@@ -342,23 +370,6 @@ class SessionCog(commands.Cog):
         for session in sessions:
             # ------- Auto cancel groups -------
             for group in db.query(Group).filter(Group.session_id == session.id).all():
-                group_owner = await self.bot.fetch_user(int(group.owner_id))
-                if group_owner is None:
-                    pass
-                else:
-                    owner_signup = db.query(SessionSignup).filter(SessionSignup.user_id == group_owner.id, SessionSignup.session_id == session.id).first()
-                    if owner_signup is None or owner_signup.state is None:
-                        pass
-                    else:
-                        if not owner_signup.state:
-                            group.canceled = True
-                            db.add(group)
-                            db.commit()
-                        else:
-                            group.canceled = False
-                            db.add(group)
-                            db.commit()
-                    
                 guild = await self.bot.fetch_guild(session.guild_id)
                 guild_obj = db.query(Guild).filter(Guild.guild_id == guild.id).first()
                 if guild_obj.groups_channel_category_id is not None:

@@ -134,6 +134,9 @@ class groupsCog(commands.Cog):
             return
         
         groupJoin = GroupJoin(user_id=ctx.author.id, group_id=group.id)
+        groupRole = ctx.guild.get_role(int(group.role_id))
+        await ctx.author.add_roles([groupRole])
+        
         db.add(groupJoin)
         db.commit()
         
@@ -194,6 +197,9 @@ class groupsCog(commands.Cog):
         if groupJoin is None:
             await msg.edit(content="You are not in this group.", view=None, embed=None)
             return
+        
+        groupRole = await ctx.guild.fetch_role(int(group.role_id))
+        await ctx.author.remove_roles(groupRole)
         
         db.delete(groupJoin)
         db.commit()
@@ -368,6 +374,10 @@ class groupsCog(commands.Cog):
         if groupJoin is None:
             await msg.edit(content="User is not in this group.", view=None, embed=None)
             return
+        
+        groupRole = ctx.guild.get_role(int(group.role_id))
+        await ctx.author.remove_roles([groupRole])
+
         
         db.delete(groupJoin)
         db.commit()
@@ -573,7 +583,14 @@ class groupsCog(commands.Cog):
         db.add(group)
         db.commit()
         
-    @groups_command_group.command(command="uncancel", description="Uncancel a group, meaning that you will be present.")
+        successEmbed = discord.Embed(
+            title="Group canceled",
+            description=f"Group `{group.name}` has been canceled.",
+            color=discord.Color.green()
+        )
+        await msg.edit(embed=successEmbed, view=None)
+        
+    @groups_command_group.command(name="uncancel", description="Uncancel a group, meaning that you will be present.")
     async def group_uncancel(self, ctx):
         sessionSelectEmbed = discord.Embed(
             title="Select a session",
@@ -619,6 +636,13 @@ class groupsCog(commands.Cog):
         group.canceled = False
         db.add(group)
         db.commit()
+        
+        successEmbed = discord.Embed(
+            title="Group canceled",
+            description=f"Group `{group.name}` has been canceled.",
+            color=discord.Color.green()
+        )
+        await msg.edit(embed=successEmbed, view=None)
        
     @groups_command_group.command(name='toggle-group-channels', description="toggle wether each group gets their own channel and role")
     async def group_toggle_group_channels(self, ctx, category: discord.CategoryChannel):
