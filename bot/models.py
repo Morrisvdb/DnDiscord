@@ -36,7 +36,6 @@ class Session(Base):
     __tablename__ = 'sessions'
     
     id = Column(Integer, primary_key=True)
-    session_id = Column(VARCHAR(255), unique=True)
     guild_id = Column(VARCHAR(255))
     time = Column(Time())
     day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday

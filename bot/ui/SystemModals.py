@@ -5,89 +5,154 @@ class SetupView(discord.ui.View):
     def __init__(self, ctx):
         super().__init__()
         self.ctx = ctx
+        self.page = 0
+        self.lenght = 5
+        self.canceled = True
+        self.initialised = False
+        self.value = None
         
-        self.default_role = None
-        self.user_update_channel = None
-        self.admin_updates_channel = None
-        self.role_select_channel = None
+        self.to_configure = {
+            'autorole_id': 'role',
+            'announce_channel_id': 'channel',
+            'updates_channel_id': 'channel',
+            'roles_select_channel': 'channel',
+            'groups_channel_category_id': 'category',
+        }
+        
+        for item in self.to_configure.keys():
+            setattr(self, item, None)
 
         # Set roles for select options
         roles = ctx.guild.roles
-        select_roles = []
+        self.select_roles = []
         
         if roles is None:
-            select_roles = discord.SelectOption(label="No Roles Found", value="none")
+            self.select_roles = discord.SelectOption(label="No Roles Found", value="none")
         else:
             if len(roles) > 25:
                 roles = roles[:25]
                 
             for role in roles:
-                select_roles.append(discord.SelectOption(label=role.name, value=str(role.id)))
-        
-        self.default_role_callback.options = select_roles
-        
+                self.select_roles.append(discord.SelectOption(label=role.name, value=str(role.id)))
+                
         channels = ctx.guild.text_channels
-        select_channels = []
+        self.select_channels = []
         
         if channels is None:
-            select_channels = discord.SelectOption(label="No Channels Found", value="none")
+            self.select_channels = discord.SelectOption(label="No Channels Found", value="none")
         else:
             if len(channels) > 24:
                 channels = channels[:24]
                 
             for channel in channels:
-                select_channels.append(discord.SelectOption(label=channel.name, value=str(channel.id)))
+                self.select_channels.append(discord.SelectOption(label=channel.name, value=str(channel.id)))
+            
+        categories = ctx.guild.categories
+        self.select_categories = []
+        
+        if categories is None:
+            self.select_categories = discord.SelectOption(label="No Categories Found", value="none")
+        else:
+            if len(categories) > 24:
+                categories = categories[:24]
                 
-        self.default_channel_callback.options = select_channels
-        self.updates_channel_callback.options = select_channels
-        select_channels.append(discord.SelectOption(label="None", value="none"))
-        self.role_select_channel_callback.options = select_channels
-        
-
-    # TODO: Implement the setup menu
-    @discord.ui.select(placeholder="Default Role", options=[discord.SelectOption(label="No Roles Found", value="none")])
-    async def default_role_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.default_role = select.values[0]
-        await interaction.response.defer()
-        
-    @discord.ui.select(placeholder="Announcement Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
-    async def default_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.user_updates_channel = select.values[0]
-        await interaction.response.defer()
-        
-    @discord.ui.select(placeholder="Admin Updates Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
-    async def updates_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.admin_updates_channel = select.values[0]
-        await interaction.response.defer()
-        
-    @discord.ui.select(placeholder="Role Select Channel", options=[discord.SelectOption(label="No Channels Found", value="none")])
-    async def role_select_channel_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        self.role_select_channel = select.values[0]
-        await interaction.response.defer()
-
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
-    async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.user_updates_channel = None
-        self.default_role = None
-        self.admin_updates_channel = None
-        self.role_select_channel = None
-        await interaction.response.send_message("Setup cancelled.", ephemeral=True)
-        self.stop()
-
-    @discord.ui.button(label="Setup", style=discord.ButtonStyle.primary)
-    async def setup(self, button: discord.ui.Button, interaction: discord.Interaction):
-        if self.default_role is None or self.user_updates_channel is None or self.admin_updates_channel is None:
-            await interaction.response.send_message("Please select a default role and announcement channel.", ephemeral=True)
+            for category in categories:
+                self.select_categories.append(discord.SelectOption(label=category.name, value=str(category.id)))
+            
+    async def update_page(self):
+        if self.page < 0:
+            self.page = 0
+        if self.page == 0:
+            self.previous_button.disabled = True
+        else:
+            self.previous_button.disabled = False
+        if self.page >= self.lenght:
+            self.canceled = False
+            self.stop()
             return
+        if self.initialised is False:
+            self.initialised = True
+            self.page = 0
+            self.next_button.label = "Next"
+        
+        current_item = list(self.to_configure.keys())[self.page]
+        
+        if self.value == 'none':
+            self.value = None
+        
+        if self.value is not None:
+            setattr(self, current_item, self.value)
+            self.value = None
+        
+        item = getattr(self, str(current_item))
+        
+        embed = discord.Embed(
+            title="Setup",
+        )
+        embed.add_field(name="Current Item", value=current_item.replace('_', ' '))
+        
+        print(item)
+        self.select_item.placeholder = f"Select a {current_item.replace('_', ' ')}..."
+        if self.to_configure[current_item] == 'role':
+            self.select_item.options = self.select_roles
+            if item is not None:
+                item = discord.utils.get(self.ctx.guild.roles, id=int(item))
+                embed.add_field(name="Current Value", value=item.mention if item is not None else "None")
+        elif self.to_configure[current_item] == 'channel':
+            self.select_item.options = self.select_channels
+            if item is not None:
+                item = discord.utils.get(self.ctx.guild.text_channels, id=int(item))
+                embed.add_field(name="Current Value", value=item.mention if item is not None else "None")
+        elif self.to_configure[current_item] == 'category':
+            self.select_item.options = self.select_categories
+            if item is not None:
+                item = discord.utils.get(self.ctx.guild.categories, id=int(item))
+                embed.add_field(name="Current Value", value=item.mention if item is not None else "None")
+
+        return self, embed
+        
+    @discord.ui.select(placeholder="--- Select one ---", options=[discord.SelectOption(label="Start", value="none")])
+    async def select_item(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.value = select.values[0]
         
         await interaction.response.defer()
-        self.stop()
+        newView = await self.update_page()
+        try:
+            await interaction.edit_original_response(view=newView[0], embed=newView[1])
+        except TypeError:
+            pass
+                
+    @discord.ui.button(label="Previous", style=discord.ButtonStyle.secondary)
+    async def previous_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if self.page > 0:
+            self.page -= 1
+        await interaction.response.defer()
+        newView = await self.update_page()
+        try:
+            await interaction.edit_original_response(view=newView[0], embed=newView[1])
+        except TypeError:
+            pass
+
         
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
+    async def cancel_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.canceled = True
+        self.stop()
+    
+    @discord.ui.button(label="Start", style=discord.ButtonStyle.secondary)
+    async def next_button(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.page += 1
+        await interaction.response.defer()
+        newView = await self.update_page()
+        await interaction.edit_original_response(view=newView[0], embed=newView[1])
+        
+    
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.ctx.author:
             await interaction.response.send_message("Bad hooman, this isn't for you.", ephemeral=True)
             return False
         return await super().interaction_check(interaction)
+
 
 class ConfirmView(discord.ui.View):
     def __init__(self):

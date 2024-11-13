@@ -77,7 +77,16 @@ class groupsCog(commands.Cog):
             return
         
         groupRole = ctx.guild.get_role(group.role_id)
-        await groupRole.delete()
+        groupChannel = ctx.guild.get_channel(group.channel_id)
+
+        try:
+            await groupRole.delete()
+        except AttributeError:
+            pass
+        try:
+            await groupChannel.delete()
+        except AttributeError:
+            pass
         
         db.delete(group)
         db.commit()
