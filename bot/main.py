@@ -8,6 +8,7 @@ bot.load_extension('cogs.SystemCog')
 bot.load_extension('cogs.SessionCog')
 bot.load_extension('cogs.HelpCog')
 bot.load_extension('cogs.RolesCog')
+bot.load_extension('cogs.GroupsCog')
 
 @bot.event
 async def on_ready():

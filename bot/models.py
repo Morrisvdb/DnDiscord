@@ -26,6 +26,7 @@ class Guild(Base):
     updates_channel_id = Column(VARCHAR(255))
     announce_channel_id = Column(VARCHAR(255))
     roles_select_channel = Column(VARCHAR(255), nullable=True)
+    groups_channel_category_id = Column(VARCHAR(255), nullable=True)
     is_set_up = Column(Boolean)
     
     def __repr__(self):
@@ -35,7 +36,6 @@ class Session(Base):
     __tablename__ = 'sessions'
     
     id = Column(Integer, primary_key=True)
-    session_id = Column(VARCHAR(255), unique=True)
     guild_id = Column(VARCHAR(255))
     time = Column(Time())
     day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday
@@ -45,6 +45,30 @@ class Session(Base):
     
     def __repr__(self):
         return f'<Session {self.name}>'
+
+class Group(Base):
+    __tablename__ = 'groups'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(32))
+    description = Column(String(1023))
+    owner_id = Column(VARCHAR(255))
+    session_id = Column(VARCHAR(255))
+    private = Column(Boolean, default=False)
+    canceled = Column(Boolean, default=False)
+    channel_id = Column(VARCHAR(255), default=0)
+    role_id = Column(VARCHAR(255), default=0)
+
+class GroupJoin(Base):
+    __tablename__ = 'group_joins'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(VARCHAR(255))
+    group_id = Column(VARCHAR(255))
+    is_invite = Column(Boolean, default=False)
+    
+    def __repr__(self):
+        return f'<GroupJoin {self.user_id} for {self.group_id}>'
 
 class SessionSignup(Base):
     __tablename__ = 'session_signups'

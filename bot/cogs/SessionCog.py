@@ -1,7 +1,7 @@
 from math import e
 import discord, datetime
 from discord.ext import commands, tasks
-from models import Guild, Session, SessionSignup, setup_required
+from models import Guild, Session, SessionSignup, Group, setup_required
 from ui.SessionModals import SessionSelectView, PresenceView, ViewPresenceView, DayTimeView
 from ui.SystemModals import ConfirmView
 from __init__ import db
@@ -10,6 +10,27 @@ class SessionCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.check_sessions.start()
+        
+    async def inform_group(self, guild, group, state):
+        group_channel = self.bot.get_channel(int(group.channel_id))
+        if group_channel is None:
+            return
+        role = guild.get_role(int(group.role_id))
+        if role is None:
+            return
+        if state:
+            embed = discord.Embed(
+                title="Group Un-Canceled",
+                description=f"The next session for the group {group.name} has been un-canceled.",
+                color=discord.Color.green()
+            )
+        else:
+            embed = discord.Embed(
+                title="Group Canceled",
+                description=f"The next session for the group {group.name} has been canceled.",
+                color=discord.Color.red()
+            )
+        await group_channel.send(content=role.mention, embed=embed)
     
     sessioncommands_group = discord.SlashCommandGroup(name='session', description='Session commands for the bot.')
     
@@ -100,7 +121,12 @@ class SessionCog(commands.Cog):
             return
         
         presenceView = PresenceView(ctx, session)
-        await msg.edit(view=presenceView)
+        presenceEmbed = discord.Embed(
+            title="Select your presence",
+            description="Select your presence for the session. \n Selecting absent will automatically cancel all groups you own.",
+            color=discord.Color.blue()
+        )
+        await msg.edit(view=presenceView, embed=presenceEmbed)
         await presenceView.wait()
         
         if presenceView.state is None:
@@ -113,6 +139,13 @@ class SessionCog(commands.Cog):
         
         signup.state = presenceView.state
         db.add(signup)
+        
+        groups = db.query(Group).filter(Group.owner_id == ctx.author.id, Group.session_id == session.id).all()
+        
+        for group in groups:
+            print(group)
+            await self.inform_group(guild=ctx.guild, group=group, state=presenceView.state) 
+        
         db.commit()
         
         await ctx.respond(f"Your presence for session {session.name} has been set to {'Present' if presenceView.state else 'Absent'}.", ephemeral=True)
@@ -335,6 +368,34 @@ class SessionCog(commands.Cog):
         """
         sessions = db.query(Session).all()
         for session in sessions:
+            # for group in db.query(Group).filter(Group.session_id == session.id).all():
+                # guild = await self.bot.fetch_guild(session.guild_id)
+                # guild_obj = db.query(Guild).filter(Guild.guild_id == guild.id).first()
+                # if guild_obj.groups_channel_category_id is not None:
+                
+                    # role = guild.get_role(int(group.role_id))
+                    # if not role:
+                    #     newRole = await guild.create_role(name=group.name)
+                    #     group.role_id = newRole.id
+                    #     db.add(group)
+                    #     db.commit()
+                    
+                    # category = self.bot.get_channel(int(guild_obj.groups_channel_category_id))
+                    # if category is not None:
+                    #     try:
+                    #         channel = await self.bot.fetch_channel(int(group.channel_id))
+                    #     except discord.errors.NotFound:
+                    #         channel = None
+                    #     if not channel:
+                    #         channel = await guild.create_text_channel(name=group.name, category=category)
+                    #         memberRole = guild.get_role(int(guild_obj.autorole_id))
+                    #         await channel.set_permissions(memberRole, view_channel=False)
+                    #         await channel.set_permissions(role, view_channel=True)
+                    #         group.channel_id = channel.id
+                    #         db.add(group)
+                    #         db.commit()
+
+            
             for signup in db.query(SessionSignup).filter(SessionSignup.session_id == session.id).all():
                 if signup.standard is not None and signup.state is None:
                     signup.state = signup.standard
@@ -367,6 +428,7 @@ class SessionCog(commands.Cog):
                         db.commit()
             else:
                 pass
+
 
 def setup(bot):
     bot.add_cog(SessionCog(bot))
