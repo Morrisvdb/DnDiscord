@@ -11,4 +11,5 @@ class Config():
     db_user = os.getenv("DATABASE_USER")
     db_password = os.getenv("DATABASE_PASSWORD")
     
-    db_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:3306/{db_name}"
+    # db_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:3306/{db_name}"
+    db_url = f"sqlite:///database.db"

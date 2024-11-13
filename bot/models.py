@@ -26,6 +26,7 @@ class Guild(Base):
     updates_channel_id = Column(VARCHAR(255))
     announce_channel_id = Column(VARCHAR(255))
     roles_select_channel = Column(VARCHAR(255), nullable=True)
+    groups_channel_category_id = Column(VARCHAR(255), nullable=True)
     is_set_up = Column(Boolean)
     
     def __repr__(self):
@@ -35,7 +36,6 @@ class Session(Base):
     __tablename__ = 'sessions'
     
     id = Column(Integer, primary_key=True)
-    session_id = Column(VARCHAR(255), unique=True)
     guild_id = Column(VARCHAR(255))
     time = Column(Time())
     day = Column(String(255)) # Any of: monday, tuesday, wednesday, thursday, friday, saturday, sunday
@@ -55,6 +55,9 @@ class Group(Base):
     owner_id = Column(VARCHAR(255))
     session_id = Column(VARCHAR(255))
     private = Column(Boolean, default=False)
+    canceled = Column(Boolean, default=False)
+    channel_id = Column(VARCHAR(255), default=0)
+    role_id = Column(VARCHAR(255), default=0)
 
 class GroupJoin(Base):
     __tablename__ = 'group_joins'

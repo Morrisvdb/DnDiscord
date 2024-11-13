@@ -6,7 +6,7 @@ from discord.ext import commands
 from sqlalchemy import desc
 from ui.SessionModals import SessionSelectView
 from ui.groupModals import GroupBrowseView, GroupSelectView, GroupEditView, ViewInvitesView, GroupsViewView
-from models import Session, Group, GroupJoin
+from models import Session, Group, GroupJoin, Guild
 from __init__ import db
 
 
@@ -35,6 +35,9 @@ class groupsCog(commands.Cog):
         session = db.query(Session).filter(Session.id == session).first()
         if session is None:
             await msg.edit(content="Invalid session selected.", view=None, embed=None)
+            return
+        if db.query(Group).filter(Group.name == name, Group.session_id == session.id).first():
+            await msg.edit(content="A group with that name already exists.", view=None, embed=None)
             return
         group = Group(name=name, owner_id=ctx.author.id, session_id=session.id, private=private)
         db.add(group)
@@ -72,6 +75,19 @@ class groupsCog(commands.Cog):
         if group is None:
             await msg.edit(content="Invalid group selected.", view=None, embed=None)
             return
+        
+        groupRole = ctx.guild.get_role(group.role_id)
+        groupChannel = ctx.guild.get_channel(group.channel_id)
+
+        try:
+            await groupRole.delete()
+        except AttributeError:
+            pass
+        try:
+            await groupChannel.delete()
+        except AttributeError:
+            pass
+        
         db.delete(group)
         db.commit()
         
@@ -127,6 +143,9 @@ class groupsCog(commands.Cog):
             return
         
         groupJoin = GroupJoin(user_id=ctx.author.id, group_id=group.id)
+        groupRole = ctx.guild.get_role(int(group.role_id))
+        await ctx.author.add_roles([groupRole])
+        
         db.add(groupJoin)
         db.commit()
         
@@ -187,6 +206,9 @@ class groupsCog(commands.Cog):
         if groupJoin is None:
             await msg.edit(content="You are not in this group.", view=None, embed=None)
             return
+        
+        groupRole = await ctx.guild.fetch_role(int(group.role_id))
+        await ctx.author.remove_roles(groupRole)
         
         db.delete(groupJoin)
         db.commit()
@@ -362,6 +384,10 @@ class groupsCog(commands.Cog):
             await msg.edit(content="User is not in this group.", view=None, embed=None)
             return
         
+        groupRole = ctx.guild.get_role(int(group.role_id))
+        await ctx.author.remove_roles([groupRole])
+
+        
         db.delete(groupJoin)
         db.commit()
         
@@ -519,6 +545,126 @@ class groupsCog(commands.Cog):
         groupListEmbed = await groupListView.update()
         await msg.edit(embed=groupListEmbed, view=groupListView)
         
+    @groups_command_group.command(name='cancel', description="Cancel a group, meaning that you will be absent.")
+    async def group_cancel(self, ctx):
+        sessionSelectEmbed = discord.Embed(
+            title="Select a session",
+            description="Select a session to cancel a group for.",
+            color=discord.Color.blue()
+        )
+        sessionSelectView = SessionSelectView(ctx)
+        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView, ephemeral=True)
+        await sessionSelectView.wait()
+        if sessionSelectView.session is None:
+            await msg.edit(content="No session selected.", view=None, embed=None)
+            return
+        
+        session = db.query(Session).filter(Session.id == sessionSelectView.session).first()
+        if session is None:
+            await msg.edit(content="Invalid session selected.", view=None, embed=None)
+            return
+        
+        groups = db.query(Group).filter(Group.owner_id == ctx.author.id, Group.session_id == session.id).all()
+        if len(groups) == 0:
+            await msg.edit(content="No groups found.", view=None, embed=None)
+            return
+        
+        groupSelectView = GroupSelectView(groups)
+        groupSelectEmbed = discord.Embed(
+            title="Select a group to cancel",
+            description="Select a group to cancel.",
+            color=discord.Color.blue()
+        )
+        
+        await msg.edit(embed=groupSelectEmbed, view=groupSelectView)
+        await groupSelectView.wait()
+        
+        if groupSelectView.selected_group is None:
+            await msg.edit(content="No group selected.", view=None, embed=None)
+            return
+        
+        group = db.query(Group).filter(Group.id == groupSelectView.selected_group).first()
+        if group is None:
+            await msg.edit(content="Invalid group selected.", view=None, embed=None)
+            return
+        
+        group.canceled = True
+        db.add(group)
+        db.commit()
+        
+        successEmbed = discord.Embed(
+            title="Group canceled",
+            description=f"Group `{group.name}` has been canceled.",
+            color=discord.Color.green()
+        )
+        await msg.edit(embed=successEmbed, view=None)
+        
+    @groups_command_group.command(name="uncancel", description="Uncancel a group, meaning that you will be present.")
+    async def group_uncancel(self, ctx):
+        sessionSelectEmbed = discord.Embed(
+            title="Select a session",
+            description="Select a session to uncancel a group for.",
+            color=discord.Color.blue()
+        )
+        sessionSelectView = SessionSelectView(ctx)
+        msg = await ctx.respond(embed=sessionSelectEmbed, view=sessionSelectView, ephemeral=True)
+        await sessionSelectView.wait()
+        if sessionSelectView.session is None:
+            await msg.edit(content="No session selected.", view=None, embed=None)
+            return
+        
+        session = db.query(Session).filter(Session.id == sessionSelectView.session).first()
+        if session is None:
+            await msg.edit(content="Invalid session selected.", view=None, embed=None)
+            return
+        
+        groups = db.query(Group).filter(Group.owner_id == ctx.author.id, Group.session_id == session.id).all()
+        if len(groups) == 0:
+            await msg.edit(content="No groups found.", view=None, embed=None)
+            return
+        
+        groupSelectView = GroupSelectView(groups)
+        groupSelectEmbed = discord.Embed(
+            title="Select a group to uncancel",
+            description="Select a group to uncancel.",
+            color=discord.Color.blue()
+        )
+        
+        await msg.edit(embed=groupSelectEmbed, view=groupSelectView)
+        await groupSelectView.wait()
+        
+        if groupSelectView.selected_group is None:
+            await msg.edit(content="No group selected.", view=None, embed=None)
+            return
+        
+        group = db.query(Group).filter(Group.id == groupSelectView.selected_group).first()
+        if group is None:
+            await msg.edit(content="Invalid group selected.", view=None, embed=None)
+            return
+        
+        group.canceled = False
+        db.add(group)
+        db.commit()
+        
+        successEmbed = discord.Embed(
+            title="Group canceled",
+            description=f"Group `{group.name}` has been canceled.",
+            color=discord.Color.green()
+        )
+        await msg.edit(embed=successEmbed, view=None)
+       
+    @groups_command_group.command(name='toggle-group-channels', description="toggle wether each group gets their own channel and role")
+    async def group_toggle_group_channels(self, ctx, category: discord.CategoryChannel):
+        guild = db.query(Guild).filter_by(guild_id = ctx.guild.id).first()
+        guild.groups_channel_category_id = category.id if guild.groups_channel_category_id is None else None
+        db.add(guild)
+        db.commit()
+        successEmbed = discord.Embed(
+            title="Group channels toggled",
+            description=f"Group channels have been {"enabled" if guild.groups_channel_category_id is not None else "disabled"} in category {category.name}.",
+            color=discord.Color.green()
+        )
+        await ctx.respond(embed=successEmbed, ephemeral=True)
         
 def setup(bot):
     bot.add_cog(groupsCog(bot))
