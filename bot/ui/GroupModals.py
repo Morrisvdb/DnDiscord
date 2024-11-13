@@ -46,7 +46,7 @@ class GroupBrowseView(discord.ui.View):
         selectable_groups = []       
         for group in self.groups[self.page * 5:self.page * 5 + 5]:
             owner_name = await bot.fetch_user(group.owner_id)
-            if self.ctx.author.id == group.owner_id:
+            if int(self.ctx.author.id) == int(group.owner_id):
                 owner_name = "You"
             else:
                 if owner_name is None:
@@ -55,7 +55,12 @@ class GroupBrowseView(discord.ui.View):
                     owner_name = owner_name.name
             joins = db.query(GroupJoin).filter_by(user_id=self.ctx.author.id, group_id=group.id).all()
             joined = True if joins else False
-            label = group.name + " - (Joined)" if joined else group.name
+            label = group.name
+            if joined:
+                label = group.name + " - (Joined)"
+            elif int(self.ctx.author.id) == int(group.owner_id):    
+                label = group.name + " - (Owner)"
+            
             selectable_groups.append(discord.SelectOption(label=label, description=f"Owner: {owner_name}", value=str(group.id)))
         self.select_group.options = selectable_groups
         embed = discord.Embed(

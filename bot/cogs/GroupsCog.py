@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import desc
 from ui.SessionModals import SessionSelectView
-from ui.groupModals import GroupBrowseView, GroupSelectView, GroupEditView, ViewInvitesView, GroupsViewView
+from ui.GroupModals import GroupBrowseView, GroupSelectView, GroupEditView, ViewInvitesView, GroupsViewView
 from models import Session, Group, GroupJoin, Guild
 from __init__ import db
 
@@ -39,9 +39,19 @@ class groupsCog(commands.Cog):
         if db.query(Group).filter(Group.name == name, Group.session_id == session.id).first():
             await msg.edit(content="A group with that name already exists.", view=None, embed=None)
             return
-        group = Group(name=name, owner_id=ctx.author.id, session_id=session.id, private=private)
+        
+        guild = db.query(Guild).filter_by(guild_id=ctx.guild.id).first()
+        groupChannelCategory = discord.utils.get(ctx.guild.categories, id=int(guild.groups_channel_category_id))
+        groupChannel = await groupChannelCategory.create_text_channel(name=name)
+        groupRole = await ctx.guild.create_role(name=name)
+        await groupChannel.set_permissions(groupRole, view_channel=True)
+        
+        
+        group = Group(name=name, owner_id=ctx.author.id, session_id=session.id, private=private, role_id=groupRole.id, channel_id=groupChannel.id)
         db.add(group)
         db.commit()
+        
+        await ctx.author.add_roles(groupRole)
         
         successEmbed = discord.Embed(
             title="Group created",
@@ -76,8 +86,8 @@ class groupsCog(commands.Cog):
             await msg.edit(content="Invalid group selected.", view=None, embed=None)
             return
         
-        groupRole = ctx.guild.get_role(group.role_id)
-        groupChannel = ctx.guild.get_channel(group.channel_id)
+        groupRole = ctx.guild.get_role(int(group.role_id))
+        groupChannel = ctx.guild.get_channel(int(group.channel_id))
 
         try:
             await groupRole.delete()
@@ -144,7 +154,7 @@ class groupsCog(commands.Cog):
         
         groupJoin = GroupJoin(user_id=ctx.author.id, group_id=group.id)
         groupRole = ctx.guild.get_role(int(group.role_id))
-        await ctx.author.add_roles([groupRole])
+        await ctx.author.add_roles(groupRole)
         
         db.add(groupJoin)
         db.commit()
@@ -653,18 +663,18 @@ class groupsCog(commands.Cog):
         )
         await msg.edit(embed=successEmbed, view=None)
        
-    @groups_command_group.command(name='toggle-group-channels', description="toggle wether each group gets their own channel and role")
-    async def group_toggle_group_channels(self, ctx, category: discord.CategoryChannel):
-        guild = db.query(Guild).filter_by(guild_id = ctx.guild.id).first()
-        guild.groups_channel_category_id = category.id if guild.groups_channel_category_id is None else None
-        db.add(guild)
-        db.commit()
-        successEmbed = discord.Embed(
-            title="Group channels toggled",
-            description=f"Group channels have been {"enabled" if guild.groups_channel_category_id is not None else "disabled"} in category {category.name}.",
-            color=discord.Color.green()
-        )
-        await ctx.respond(embed=successEmbed, ephemeral=True)
+    # @groups_command_group.command(name='toggle-group-channels', description="toggle wether each group gets their own channel and role")
+    # async def group_toggle_group_channels(self, ctx, category: discord.CategoryChannel):
+    #     guild = db.query(Guild).filter_by(guild_id = ctx.guild.id).first()
+    #     guild.groups_channel_category_id = category.id if guild.groups_channel_category_id is None else None
+    #     db.add(guild)
+    #     db.commit()
+    #     successEmbed = discord.Embed(
+    #         title="Group channels toggled",
+    #         description=f"Group channels have been {"enabled" if guild.groups_channel_category_id is not None else "disabled"} in category {category.name}.",
+    #         color=discord.Color.green()
+    #     )
+    #     await ctx.respond(embed=successEmbed, ephemeral=True)
         
 def setup(bot):
     bot.add_cog(groupsCog(bot))
