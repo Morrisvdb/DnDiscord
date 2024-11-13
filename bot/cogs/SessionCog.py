@@ -368,33 +368,32 @@ class SessionCog(commands.Cog):
         """
         sessions = db.query(Session).all()
         for session in sessions:
-            # ------- Auto cancel groups -------
-            for group in db.query(Group).filter(Group.session_id == session.id).all():
-                guild = await self.bot.fetch_guild(session.guild_id)
-                guild_obj = db.query(Guild).filter(Guild.guild_id == guild.id).first()
-                if guild_obj.groups_channel_category_id is not None:
+            # for group in db.query(Group).filter(Group.session_id == session.id).all():
+                # guild = await self.bot.fetch_guild(session.guild_id)
+                # guild_obj = db.query(Guild).filter(Guild.guild_id == guild.id).first()
+                # if guild_obj.groups_channel_category_id is not None:
                 
-                    role = guild.get_role(int(group.role_id))
-                    if not role:
-                        newRole = await guild.create_role(name=group.name)
-                        group.role_id = newRole.id
-                        db.add(group)
-                        db.commit()                    
+                    # role = guild.get_role(int(group.role_id))
+                    # if not role:
+                    #     newRole = await guild.create_role(name=group.name)
+                    #     group.role_id = newRole.id
+                    #     db.add(group)
+                    #     db.commit()
                     
-                    category = self.bot.get_channel(int(guild_obj.groups_channel_category_id))
-                    if category is not None:
-                        try:
-                            channel = await self.bot.fetch_channel(int(group.channel_id))
-                        except discord.errors.NotFound:
-                            channel = None
-                        if not channel:
-                            channel = await guild.create_text_channel(name=group.name, category=category)
-                            memberRole = guild.get_role(int(guild_obj.autorole_id))
-                            await channel.set_permissions(memberRole, view_channel=False)
-                            await channel.set_permissions(role, view_channel=True)
-                            group.channel_id = channel.id
-                            db.add(group)
-                            db.commit()
+                    # category = self.bot.get_channel(int(guild_obj.groups_channel_category_id))
+                    # if category is not None:
+                    #     try:
+                    #         channel = await self.bot.fetch_channel(int(group.channel_id))
+                    #     except discord.errors.NotFound:
+                    #         channel = None
+                    #     if not channel:
+                    #         channel = await guild.create_text_channel(name=group.name, category=category)
+                    #         memberRole = guild.get_role(int(guild_obj.autorole_id))
+                    #         await channel.set_permissions(memberRole, view_channel=False)
+                    #         await channel.set_permissions(role, view_channel=True)
+                    #         group.channel_id = channel.id
+                    #         db.add(group)
+                    #         db.commit()
 
             
             for signup in db.query(SessionSignup).filter(SessionSignup.session_id == session.id).all():
