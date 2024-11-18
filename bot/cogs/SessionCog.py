@@ -143,7 +143,6 @@ class SessionCog(commands.Cog):
         groups = db.query(Group).filter(Group.owner_id == ctx.author.id, Group.session_id == session.id).all()
         
         for group in groups:
-            print(group)
             await self.inform_group(guild=ctx.guild, group=group, state=presenceView.state) 
         
         db.commit()

@@ -14,7 +14,7 @@ class groupsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-    groups_command_group = discord.SlashCommandGroup(name="group", help="Group management commands.", guild_ids=[977513866097479760])
+    groups_command_group = discord.SlashCommandGroup(name="group", help="Group management commands.")
     
     @groups_command_group.command(name="create", description="Create a new group.")
     async def group_create(self, ctx, name, description: discord.Option(str, min=4, max=1023, required=False), private: bool = False):
