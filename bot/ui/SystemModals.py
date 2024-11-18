@@ -91,7 +91,6 @@ class SetupView(discord.ui.View):
         )
         embed.add_field(name="Current Item", value=current_item.replace('_', ' '))
         
-        print(item)
         self.select_item.placeholder = f"Select a {current_item.replace('_', ' ')}..."
         if self.to_configure[current_item] == 'role':
             self.select_item.options = self.select_roles
